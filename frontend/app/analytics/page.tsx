@@ -1,0 +1,2 @@
+import { MetricCard } from "../../components/metric-card";
+export default function AnalyticsPage(){return <section><h2>Analytics</h2><p className="muted">YouTube performance snapshots and automated improvement recommendations.</p><div className="grid"><MetricCard label="Views" value="1.2M" hint="Last 28 days"/><MetricCard label="CTR" value="7.4%" hint="Thumbnail/title fit"/><MetricCard label="Retention" value="58%" hint="Average viewed"/><MetricCard label="RPM" value="$4.80" hint="Estimated revenue per mille"/></div></section>}

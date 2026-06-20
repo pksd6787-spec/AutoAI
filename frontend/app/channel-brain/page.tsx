@@ -1,0 +1,2 @@
+import { MetricCard } from "../../components/metric-card";
+export default function ChannelBrainPage(){return <section><h2>Channel Brain</h2><p className="muted">Learns from CTR, retention, watch time, subscribers, RPM, geography, demographics, and returning viewers.</p><div className="grid"><MetricCard label="Top Niche" value="Space" hint="+18 score boost"/><MetricCard label="Best Language" value="Hinglish" hint="Higher retention"/><MetricCard label="Best Thumbnail" value="Mystery" hint="+2.4 CTR lift"/></div></section>}
