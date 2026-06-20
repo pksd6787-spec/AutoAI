@@ -51,3 +51,35 @@ class AnalyticsInsightResponse(BaseModel):
     status: str
     latest: dict | None = None
     insights: list[str] = Field(default_factory=list)
+
+class WorkflowRunRequest(BaseModel):
+    project_id: str
+    input: dict = Field(default_factory=dict)
+
+class WorkflowJobRead(BaseModel):
+    id: str
+    workflow_id: str
+    job_type: str
+    status: str
+    parallel: bool
+    attempts: int
+    max_attempts: int
+    output: dict = Field(default_factory=dict)
+    error_message: str | None = None
+
+class WorkflowRunRead(BaseModel):
+    id: str
+    project_id: str
+    workflow_type: str
+    status: str
+    input: dict = Field(default_factory=dict)
+    output: dict = Field(default_factory=dict)
+    jobs: list[WorkflowJobRead]
+
+class ProviderHealthRead(BaseModel):
+    name: str
+    healthy: bool
+    priority: int
+    quota_remaining: float
+    latency_ms: int | None = None
+    reason: str | None = None

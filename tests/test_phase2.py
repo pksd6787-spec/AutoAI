@@ -43,3 +43,34 @@ def test_viral_prediction_outputs_expected_fields():
     result = asyncio.run(ViralPredictionAgent().run({"growth_rate": 80, "search_demand": 70, "audience_interest": 75, "trend_velocity": 60}))
     assert result["viral_score"] > 60
     assert result["predicted_watch_time_seconds"] > 300
+
+from app.services.ai.health import ProviderCostEstimator, ProviderHealthMonitor
+from app.services.workflows.runtime import RuntimeStatus, WorkflowRuntime
+
+
+def test_workflow_runtime_create_enqueue_and_complete():
+    runtime = WorkflowRuntime()
+    workflow = runtime.create_daily_workflow("project-1", {"seed": "space"})
+    assert len(workflow.jobs) >= 10
+    runtime.enqueue(workflow.id)
+    completed = runtime.run_next()
+    assert completed is not None
+    assert completed.status == RuntimeStatus.completed
+    assert completed.output["completed_jobs"] == len(completed.jobs)
+
+
+def test_workflow_runtime_pause_resume_cancel():
+    runtime = WorkflowRuntime()
+    workflow = runtime.create_daily_workflow("project-1")
+    runtime.enqueue(workflow.id)
+    assert runtime.pause(workflow.id).status == RuntimeStatus.paused
+    assert runtime.resume(workflow.id).status == RuntimeStatus.queued
+    assert runtime.cancel(workflow.id).status == RuntimeStatus.canceled
+
+
+def test_provider_health_and_cost_estimator():
+    providers = [Provider("groq", 1, quota_remaining=10), Provider("nvidia", 2, healthy=False)]
+    snapshots = ProviderHealthMonitor().snapshot(providers)
+    assert snapshots[0].healthy is True
+    assert snapshots[1].healthy is False
+    assert ProviderCostEstimator().estimate(1000, 500, 0.01, 0.02) == 0.02

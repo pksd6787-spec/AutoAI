@@ -8,6 +8,7 @@ export const navigation = [
   { href: "/voiceovers", label: "Voiceovers", description: "Kokoro and Coqui plans" },
   { href: "/videos", label: "Videos", description: "Renders and versions" },
   { href: "/publishing", label: "Publishing", description: "YouTube scheduling" },
+  { href: "/workflows", label: "Workflows", description: "Queues, retries, pause/resume" },
   { href: "/analytics", label: "Analytics", description: "Performance insights" },
   { href: "/channel-brain", label: "Channel Brain", description: "Learning loop" },
   { href: "/settings", label: "Settings", description: "Provider and workflow thresholds" },

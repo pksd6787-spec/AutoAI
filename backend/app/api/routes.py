@@ -6,11 +6,14 @@ from app.models.domain import Opportunity
 from app.schemas.api import DailyDecision, OpportunityCreate, OpportunityRead
 from app.services.agents.core_agents import MonetizationPredictionAgent, TopicSelectionAgent, ViralPredictionAgent
 from app.services.workflows.engine import WorkflowEngine
-from app.schemas.api import AnalyticsInsightRequest, AnalyticsInsightResponse, ContentPipelineRequest, ContentPipelineResponse, OAuthUrlResponse
+from app.schemas.api import AnalyticsInsightRequest, AnalyticsInsightResponse, ContentPipelineRequest, ContentPipelineResponse, OAuthUrlResponse, ProviderHealthRead, WorkflowRunRead, WorkflowRunRequest
 from app.services.analytics.insights import AnalyticsInsightEngine
 from app.services.auth.google_oauth import SCOPES, build_google_oauth_url
 from app.services.content.generation import HumanizationEngine, SEOGenerator, ScenePlanner, ScriptGenerator
 from app.services.media.pipeline import ImagePromptGenerator, RenderPlanGenerator, SubtitleGenerator, VoicePlanGenerator
+from app.services.ai.health import ProviderHealthMonitor
+from app.services.ai.provider_router import AIProviderRouter
+from app.services.workflows.runtime import runtime
 
 router = APIRouter(prefix="/api/v1")
 
@@ -78,3 +81,45 @@ async def content_pipeline(payload: ContentPipelineRequest):
 @router.post("/analytics/insights", response_model=AnalyticsInsightResponse)
 async def analytics_insights(payload: AnalyticsInsightRequest):
     return AnalyticsInsightEngine().summarize(payload.snapshots)
+
+
+def _workflow_read(workflow) -> WorkflowRunRead:
+    return WorkflowRunRead(
+        id=workflow.id,
+        project_id=workflow.project_id,
+        workflow_type=workflow.workflow_type,
+        status=workflow.status.value,
+        input=workflow.input,
+        output=workflow.output,
+        jobs=[job.__dict__ | {"status": job.status.value} for job in workflow.jobs],
+    )
+
+@router.post("/workflows/daily", response_model=WorkflowRunRead)
+async def create_daily_workflow(payload: WorkflowRunRequest):
+    workflow = runtime.create_daily_workflow(payload.project_id, payload.input)
+    runtime.enqueue(workflow.id)
+    return _workflow_read(workflow)
+
+@router.post("/workflows/{workflow_id}/run-next", response_model=WorkflowRunRead | None)
+async def run_next_workflow(workflow_id: str):
+    if workflow_id not in runtime.queue:
+        runtime.enqueue(workflow_id)
+    workflow = runtime.run_next()
+    return _workflow_read(workflow) if workflow else None
+
+@router.post("/workflows/{workflow_id}/pause", response_model=WorkflowRunRead)
+async def pause_workflow(workflow_id: str):
+    return _workflow_read(runtime.pause(workflow_id))
+
+@router.post("/workflows/{workflow_id}/resume", response_model=WorkflowRunRead)
+async def resume_workflow(workflow_id: str):
+    return _workflow_read(runtime.resume(workflow_id))
+
+@router.post("/workflows/{workflow_id}/cancel", response_model=WorkflowRunRead)
+async def cancel_workflow(workflow_id: str):
+    return _workflow_read(runtime.cancel(workflow_id))
+
+@router.get("/ai/providers/health", response_model=list[ProviderHealthRead])
+async def provider_health():
+    router = AIProviderRouter()
+    return [snapshot.__dict__ for snapshot in ProviderHealthMonitor().snapshot(router.providers)]
