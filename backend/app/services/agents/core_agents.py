@@ -34,3 +34,42 @@ class TopicSelectionAgent(Agent):
         approved = [c for c in candidates if c.get("viral_score", 0) > settings.viral_threshold and c.get("opportunity_score", 0) > settings.opportunity_threshold and c.get("monetization_score", 0) > settings.monetization_threshold]
         approved.sort(key=lambda c: (c["viral_score"] + c["opportunity_score"] + c["monetization_score"]), reverse=True)
         return {"approved": approved, "selected": approved[0] if approved else None}
+
+class ResearchAgent(Agent):
+    name = "research"
+    async def run(self, payload: dict) -> dict:
+        topic = payload["topic"]
+        return {"items": [
+            {"item_type": "timeline", "title": f"Origins of {topic}", "content": f"Establish the earliest documented context for {topic}.", "confidence_score": 0.72},
+            {"item_type": "key_event", "title": f"Turning point in {topic}", "content": "Identify the decision or event that changed public attention.", "confidence_score": 0.68},
+            {"item_type": "reference", "title": "Source bundle", "content": "Collect primary sources, reputable news, public data, and archive material.", "confidence_score": 0.75},
+        ]}
+
+class FactVerificationAgent(Agent):
+    name = "fact_verification"
+    async def run(self, payload: dict) -> dict:
+        items = payload.get("items", [])
+        verified = [item for item in items if item.get("confidence_score", 0) >= 0.6]
+        score = round(sum(item.get("confidence_score", 0) for item in verified) / max(len(verified), 1), 2)
+        return {"verified_items": verified, "removed_count": len(items) - len(verified), "verification_score": score}
+
+class CompetitionAnalysisAgent(Agent):
+    name = "competition_analysis"
+    async def run(self, payload: dict) -> dict:
+        views = payload.get("median_views", 100_000)
+        channels = payload.get("competing_channels", 12)
+        freshness = payload.get("freshness_days", 30)
+        competition_score = min(100, channels * 5 + max(0, 30 - freshness))
+        opportunity_score = max(0, min(100, views / 5000 - competition_score / 3 + 60))
+        return {"competition_score": round(competition_score, 2), "opportunity_score": round(opportunity_score, 2)}
+
+class ThumbnailAgent(Agent):
+    name = "thumbnail"
+    async def run(self, payload: dict) -> dict:
+        topic = payload["topic"]
+        variants = [
+            {"label": "mystery", "text": "They Hid This", "prompt": f"high contrast shocked face, dark mystery background, {topic}", "predicted_ctr": 7.8},
+            {"label": "evidence", "text": "Proof Found", "prompt": f"documentary evidence board, red strings, archival photo, {topic}", "predicted_ctr": 6.9},
+            {"label": "scale", "text": "Bigger Than You Think", "prompt": f"massive cinematic scale, tiny human silhouette, {topic}", "predicted_ctr": 7.2},
+        ]
+        return {"variants": variants, "selected": max(variants, key=lambda item: item["predicted_ctr"])}

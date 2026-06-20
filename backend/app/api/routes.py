@@ -6,6 +6,11 @@ from app.models.domain import Opportunity
 from app.schemas.api import DailyDecision, OpportunityCreate, OpportunityRead
 from app.services.agents.core_agents import MonetizationPredictionAgent, TopicSelectionAgent, ViralPredictionAgent
 from app.services.workflows.engine import WorkflowEngine
+from app.schemas.api import AnalyticsInsightRequest, AnalyticsInsightResponse, ContentPipelineRequest, ContentPipelineResponse, OAuthUrlResponse
+from app.services.analytics.insights import AnalyticsInsightEngine
+from app.services.auth.google_oauth import SCOPES, build_google_oauth_url
+from app.services.content.generation import HumanizationEngine, SEOGenerator, ScenePlanner, ScriptGenerator
+from app.services.media.pipeline import ImagePromptGenerator, RenderPlanGenerator, SubtitleGenerator, VoicePlanGenerator
 
 router = APIRouter(prefix="/api/v1")
 
@@ -43,3 +48,33 @@ async def daily_decision(project_id: str, db: AsyncSession = Depends(get_db)):
 @router.get("/workflows/daily-plan")
 async def daily_plan(project_id: str):
     return {"project_id": project_id, "jobs": WorkflowEngine().plan_daily_documentary(project_id)}
+
+
+@router.get("/auth/google/url", response_model=OAuthUrlResponse)
+async def google_oauth_url(client_id: str, redirect_uri: str, state: str):
+    return OAuthUrlResponse(url=build_google_oauth_url(client_id, redirect_uri, state), scopes=SCOPES)
+
+@router.post("/content/pipeline", response_model=ContentPipelineResponse)
+async def content_pipeline(payload: ContentPipelineRequest):
+    script = ScriptGenerator().generate(payload.topic, payload.research, payload.language)
+    humanized = HumanizationEngine().humanize(script, payload.language)
+    scenes = ScenePlanner().plan(humanized)
+    seo = SEOGenerator().generate(payload.topic, scenes)
+    image_prompts = [ImagePromptGenerator().prompt_for_scene(scene) for scene in scenes]
+    voice_plans = [VoicePlanGenerator().plan_voiceover(scene, payload.language) for scene in scenes]
+    subtitles = SubtitleGenerator().generate_srt(scenes)
+    render_plan = RenderPlanGenerator().build_render_plan(scenes)
+    return ContentPipelineResponse(
+        script=script.__dict__,
+        humanized_script=humanized,
+        scenes=scenes,
+        seo=seo,
+        subtitles_srt=subtitles,
+        render_plan=render_plan,
+        image_prompts=image_prompts,
+        voice_plans=voice_plans,
+    )
+
+@router.post("/analytics/insights", response_model=AnalyticsInsightResponse)
+async def analytics_insights(payload: AnalyticsInsightRequest):
+    return AnalyticsInsightEngine().summarize(payload.snapshots)

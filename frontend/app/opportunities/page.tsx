@@ -1,1 +1,6 @@
-export default function Page(){return <section><h2 style={{textTransform:"capitalize"}}>opportunities</h2><p className="muted">Production console for autonomous documentary opportunities workflows.</p><div className="card">Live data will be loaded from the FastAPI backend.</div></section>}
+const rows = [
+  ["Space debris economy", "87", "74", "81", "approved"],
+  ["AI chip supply chain", "76", "63", "88", "watchlist"],
+  ["Lost city rediscovery", "69", "80", "55", "rejected"],
+];
+export default function OpportunitiesPage(){return <section><h2>Opportunities</h2><p className="muted">Trend discoveries ranked by viral, opportunity, and monetization thresholds.</p><table className="table"><thead><tr><th>Topic</th><th>Viral</th><th>Opportunity</th><th>Money</th><th>Status</th></tr></thead><tbody>{rows.map(row=><tr key={row[0]}>{row.map(cell=><td key={cell}>{cell}</td>)}</tr>)}</tbody></table></section>}

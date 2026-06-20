@@ -24,3 +24,30 @@ class DailyDecision(BaseModel):
     selected_topic: str | None = None
     scores: dict = Field(default_factory=dict)
     rationale: list[str] = Field(default_factory=list)
+
+class ContentPipelineRequest(BaseModel):
+    topic: str
+    language: str = "hinglish"
+    research: list[dict] = Field(default_factory=list)
+
+class ContentPipelineResponse(BaseModel):
+    script: dict
+    humanized_script: str
+    scenes: list[dict]
+    seo: dict
+    subtitles_srt: str
+    render_plan: dict
+    image_prompts: list[dict]
+    voice_plans: list[dict]
+
+class OAuthUrlResponse(BaseModel):
+    url: str
+    scopes: list[str]
+
+class AnalyticsInsightRequest(BaseModel):
+    snapshots: list[dict] = Field(default_factory=list)
+
+class AnalyticsInsightResponse(BaseModel):
+    status: str
+    latest: dict | None = None
+    insights: list[str] = Field(default_factory=list)
