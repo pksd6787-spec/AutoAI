@@ -1,0 +1,1 @@
+export default function Page(){return <section><h2 style={{textTransform:"capitalize"}}>research</h2><p className="muted">Production console for autonomous documentary research workflows.</p><div className="card">Live data will be loaded from the FastAPI backend.</div></section>}

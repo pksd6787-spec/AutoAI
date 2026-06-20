@@ -1,0 +1,5 @@
+import { MetricCard } from "../../components/metric-card";
+
+const workflow = ["Discover", "Research", "Score", "Select", "Generate", "Publish", "Analyze", "Learn"];
+
+export default function DashboardPage(){return <section><div className="hero"><div><span className="pill">Autonomous daily run</span><h2>What documentary should we create today?</h2><p className="muted">The system ranks opportunities by viral potential, monetization, channel fit, and production feasibility.</p></div><div className="card"><strong>Selected candidate</strong><p>The Hidden Economics of Space Debris</p><small className="muted">Awaiting fact verification threshold</small></div></div><div className="grid"><MetricCard label="Viral Score" value="87" hint="Trend velocity + curiosity gap"/><MetricCard label="Opportunity" value="74" hint="Demand adjusted by competition"/><MetricCard label="Monetization" value="81" hint="Brand safety + RPM category"/><MetricCard label="Channel Fit" value="92" hint="Boosted by Channel Brain"/></div><ol className="timeline">{workflow.map(step=><li key={step}>{step}</li>)}</ol></section>}

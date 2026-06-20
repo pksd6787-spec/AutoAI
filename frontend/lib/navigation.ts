@@ -1,0 +1,16 @@
+export const navigation = [
+  { href: "/dashboard", label: "Dashboard", description: "Daily decision cockpit" },
+  { href: "/opportunities", label: "Opportunities", description: "Trend and topic scoring" },
+  { href: "/research", label: "Research", description: "Facts, references, timelines" },
+  { href: "/scripts", label: "Scripts", description: "Documentary writing pipeline" },
+  { href: "/scene-planner", label: "Scene Planner", description: "Timed visual plans" },
+  { href: "/media-library", label: "Media Library", description: "Assets in MinIO" },
+  { href: "/voiceovers", label: "Voiceovers", description: "Kokoro and Coqui plans" },
+  { href: "/videos", label: "Videos", description: "Renders and versions" },
+  { href: "/publishing", label: "Publishing", description: "YouTube scheduling" },
+  { href: "/analytics", label: "Analytics", description: "Performance insights" },
+  { href: "/channel-brain", label: "Channel Brain", description: "Learning loop" },
+  { href: "/settings", label: "Settings", description: "Provider and workflow thresholds" },
+  { href: "/billing", label: "Billing", description: "Plans and usage" },
+  { href: "/administration", label: "Administration", description: "Users, roles, audit" },
+];
