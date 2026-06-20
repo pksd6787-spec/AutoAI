@@ -35,6 +35,14 @@ The platform is designed to answer every day:
 - Workflow dashboard page for queue, retry, pause/resume, and parallel-job visibility
 - Additional unit tests for workflow runtime state transitions and provider health/cost behavior
 
+
+### Phase 4
+
+- Production-shaped AI provider router with injectable transport layer, prioritized fallback, per-provider rate limiting, circuit breaker state, quota checks, token accounting, latency recording, and usage ledger
+- Provider health and sample usage API endpoints for operational dashboards
+- Provider router documentation in `docs/AI_PROVIDER_ROUTER.md`
+- Additional tests for usage accounting, rate limiting, circuit breaker behavior, and failure telemetry
+
 ## Run locally
 
 ```bash

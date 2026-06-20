@@ -6,7 +6,7 @@ from app.models.domain import Opportunity
 from app.schemas.api import DailyDecision, OpportunityCreate, OpportunityRead
 from app.services.agents.core_agents import MonetizationPredictionAgent, TopicSelectionAgent, ViralPredictionAgent
 from app.services.workflows.engine import WorkflowEngine
-from app.schemas.api import AnalyticsInsightRequest, AnalyticsInsightResponse, ContentPipelineRequest, ContentPipelineResponse, OAuthUrlResponse, ProviderHealthRead, WorkflowRunRead, WorkflowRunRequest
+from app.schemas.api import AnalyticsInsightRequest, AnalyticsInsightResponse, ContentPipelineRequest, ContentPipelineResponse, OAuthUrlResponse, ProviderHealthRead, ProviderUsageRead, WorkflowRunRead, WorkflowRunRequest
 from app.services.analytics.insights import AnalyticsInsightEngine
 from app.services.auth.google_oauth import SCOPES, build_google_oauth_url
 from app.services.content.generation import HumanizationEngine, SEOGenerator, ScenePlanner, ScriptGenerator
@@ -123,3 +123,15 @@ async def cancel_workflow(workflow_id: str):
 async def provider_health():
     router = AIProviderRouter()
     return [snapshot.__dict__ for snapshot in ProviderHealthMonitor().snapshot(router.providers)]
+
+
+@router.post("/ai/providers/generate")
+async def provider_generate(prompt: str, task: str = "general"):
+    router = AIProviderRouter()
+    return await router.generate(prompt, task)
+
+@router.get("/ai/providers/usage/sample", response_model=list[ProviderUsageRead])
+async def provider_usage_sample():
+    router = AIProviderRouter()
+    await router.generate("sample prompt", "health_sample")
+    return [event.__dict__ for event in router.usage_ledger.events]

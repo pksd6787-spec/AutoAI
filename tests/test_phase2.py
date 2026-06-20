@@ -74,3 +74,49 @@ def test_provider_health_and_cost_estimator():
     assert snapshots[0].healthy is True
     assert snapshots[1].healthy is False
     assert ProviderCostEstimator().estimate(1000, 500, 0.01, 0.02) == 0.02
+
+from app.services.ai.provider_router import CircuitBreaker, RateLimiter, UsageLedger
+
+
+class FailingTransport:
+    async def generate(self, provider, prompt, task):
+        raise RuntimeError("provider exploded")
+
+
+def test_provider_router_records_usage_cost_and_tokens():
+    ledger = UsageLedger()
+    router = AIProviderRouter([Provider("groq", 1, input_cost_per_1k=1, output_cost_per_1k=1)], usage_ledger=ledger)
+    result = asyncio.run(router.generate("hello world", "script"))
+    assert result["input_tokens"] > 0
+    assert result["output_tokens"] == 128
+    assert ledger.events[0].success is True
+    assert ledger.total_cost() > 0
+
+
+def test_rate_limiter_blocks_after_provider_limit():
+    limiter = RateLimiter()
+    provider = Provider("groq", 1, rate_limit_per_minute=1)
+    assert limiter.allow(provider, now=1000) is True
+    assert limiter.allow(provider, now=1001) is False
+    assert limiter.allow(provider, now=1062) is True
+
+
+def test_circuit_breaker_opens_after_failures():
+    breaker = CircuitBreaker(failure_threshold=2, cooldown_seconds=30)
+    provider = Provider("groq", 1)
+    breaker.record_failure(provider, now=100)
+    assert breaker.can_call(provider, now=101) is True
+    breaker.record_failure(provider, now=102)
+    assert provider.healthy is False
+    assert breaker.can_call(provider, now=103) is False
+    assert breaker.can_call(provider, now=133) is True
+
+
+def test_provider_router_falls_back_after_transport_failure():
+    router = AIProviderRouter([Provider("groq", 1), Provider("nvidia", 2)], transport=FailingTransport(), circuit_breaker=CircuitBreaker(failure_threshold=1))
+    try:
+        asyncio.run(router.generate("hello", "failing", max_retries=0))
+    except RuntimeError as exc:
+        assert "All AI providers failed" in str(exc)
+    assert all(provider.healthy is False for provider in router.providers)
+    assert len(router.usage_ledger.events) == 2

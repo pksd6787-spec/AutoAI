@@ -83,3 +83,13 @@ class ProviderHealthRead(BaseModel):
     quota_remaining: float
     latency_ms: int | None = None
     reason: str | None = None
+
+class ProviderUsageRead(BaseModel):
+    provider: str
+    task: str
+    input_tokens: int
+    output_tokens: int
+    cost: float
+    latency_ms: int
+    success: bool
+    error: str | None = None
