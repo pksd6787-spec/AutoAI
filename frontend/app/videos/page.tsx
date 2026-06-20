@@ -1,0 +1,1 @@
+export default function Page(){return <section><h2 style={{textTransform:"capitalize"}}>videos</h2><p className="muted">Production console for autonomous documentary videos workflows.</p><div className="card">Live data will be loaded from the FastAPI backend.</div></section>}
